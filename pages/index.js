@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
-import { AreaChart, Area, ResponsiveContainer, YAxis, XAxis, Tooltip } from 'recharts';
+import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 import { Wallet, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 const API_URL = "https://script.google.com/macros/s/AKfycbznNPnaMdxuHaXIy1fLj1sPvanpRLUcLPmsD7_35kR95_vtFHqDQH9DlJXSc9ujXhNp/exec";
@@ -13,8 +13,8 @@ export default function Dashboard() {
   }, []);
 
   if (!data) return (
-    <div className="flex h-screen items-center justify-center bg-[#fcfcfd]">
-      <div className="text-xl font-black tracking-tighter animate-pulse text-slate-400 uppercase">Syncing Ledger...</div>
+    <div className="flex h-screen items-center justify-center bg-[#fcfcfd] font-sans font-black tracking-tighter uppercase text-slate-400 animate-pulse">
+      Syncing Ledger...
     </div>
   );
 
@@ -23,23 +23,22 @@ export default function Dashboard() {
   const dailyChange = (latest['Daily Change %'] || 0) * 100;
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd] text-slate-900 pb-20">
+    <div className="min-h-screen bg-[#fcfcfd] text-slate-900 pb-20 font-sans">
       <Head>
         <title>The Editorial Ledger</title>
+        {/* This "force-loads" the professional styling */}
         <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet" />
+        <style>{`body { font-family: 'Inter', sans-serif; }`}</style>
       </Head>
 
       <nav className="p-8 max-w-5xl mx-auto flex justify-between items-center">
         <h1 className="text-xl font-black tracking-tighter uppercase border-b-4 border-slate-900">The Editorial Ledger</h1>
-        <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden border border-slate-100">
-           <img src="https://ui-avatars.com/api/?name=Mark&background=0f172a&color=fff" alt="Avatar" />
-        </div>
+        <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
       </nav>
 
-      <main className="max-w-5xl mx-auto px-8 space-y-16">
-        
-        {/* HERO SECTION */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-12 items-end pt-10">
+      <main className="max-w-5xl mx-auto px-8 space-y-16 pt-10">
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-12 items-end">
           <div>
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Net Worth Portfolio</p>
             <h2 className="text-7xl md:text-8xl font-black tracking-tighter leading-none mb-6">
@@ -47,11 +46,10 @@ export default function Dashboard() {
             </h2>
             <div className={`flex items-center gap-2 font-bold ${dailyChange >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
               {dailyChange >= 0 ? <ArrowUpRight size={20} /> : <ArrowDownRight size={20} />}
-              <span>{dailyChange.toFixed(2)}% Today</span>
+              <span>{dailyChange.toFixed(2)}% Performance Today</span>
             </div>
           </div>
 
-          {/* PERFORMANCE CHART */}
           <div className="h-40 w-full bg-white rounded-3xl p-4 border border-slate-100 shadow-sm">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data.history}>
@@ -67,10 +65,9 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {/* ASSET DISTRIBUTION */}
         <section className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
           <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-8 flex items-center gap-2">
-            <Wallet size={14} /> Asset Distribution
+            <Wallet size={14} /> Current Holdings
           </h3>
           <div className="space-y-2">
             {data.holdings.map((stock, i) => (
