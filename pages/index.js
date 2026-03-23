@@ -1,117 +1,83 @@
-'use client';
 import React, { useState, useEffect } from 'react';
-import Head from 'next/head';
-import { Wallet, ArrowUpRight, ArrowDownRight, Loader2, PieChart as PieIcon } from 'lucide-react';
 
 const API_URL = "https://script.google.com/macros/s/AKfycbznNPnaMdxuHaXIy1fLj1sPvanpRLUcLPmsD7_35kR95_vtFHqDQH9DlJXSc9ujXhNp/exec";
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
-  const [Charts, setCharts] = useState(null);
 
   useEffect(() => {
     fetch(API_URL).then(res => res.json()).then(setData);
-    // Dynamically load charts only in the browser to prevent Vercel build errors
-    import('recharts').then(setCharts);
   }, []);
 
-  if (!data) return (
-    <div className="flex h-screen items-center justify-center bg-[#fcfcfd]">
-      <div className="flex flex-col items-center gap-4 text-slate-300">
-        <Loader2 className="animate-spin" size={40} />
-        <span className="font-black uppercase tracking-tighter">Syncing Ledger...</span>
-      </div>
-    </div>
-  );
+  if (!data) return <div style={{display:'flex', height:'100vh', alignItems:'center', justifyContent:'center', fontWeight:'900', fontFamily:'sans-serif'}}>SYNCING LEDGER...</div>;
 
   const latest = data.history?.[data.history.length - 1] || {};
   const totalValue = latest['Total Value'] || 0;
-  const dailyChange = (latest['Daily Change %'] || 0) * 100;
   const stocks = data.holdings.filter(s => s.Ticker !== 'CASH');
   const cashValue = data.holdings.find(s => s.Ticker === 'CASH')?.['Current Price'] || 0;
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd] text-[#0f172a] p-6 md:p-12 font-sans selection:bg-slate-900 selection:text-white">
-      <Head>
-        <title>The Editorial Ledger</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet" />
-        <style>{`body { font-family: 'Inter', sans-serif; }`}</style>
-      </Head>
+    <div className="app-container">
+      <style>{`
+        body { margin: 0; background-color: #fcfcfd; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #0f172a; }
+        .app-container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+        nav { margin-bottom: 60px; }
+        h1 { font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: -1px; border-bottom: 6px solid #0f172a; display: inline-block; padding-bottom: 4px; margin: 0; }
+        .hero { margin-bottom: 80px; }
+        .label { font-size: 11px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; }
+        .total-val { font-size: clamp(60px, 12vw, 120px); font-weight: 900; letter-spacing: -6px; line-height: 0.9; margin: 0; }
+        .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 32px; }
+        @media (max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; } }
+        .card { background: white; border-radius: 40px; border: 1px solid #f1f5f9; padding: 40px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05); }
+        .cash-card { background: #0f172a; color: white; display: flex; flex-direction: column; justify-content: space-between; }
+        .stock-row { display: flex; justify-content: space-between; align-items: center; padding: 24px 0; border-bottom: 1px solid #f8fafc; }
+        .stock-row:last-child { border: none; }
+        .ticker { font-size: 24px; font-weight: 900; letter-spacing: -1px; text-transform: uppercase; margin: 0; }
+        .stock-name { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
+        .price { font-size: 20px; font-weight: 700; margin: 0; }
+        .gain { font-size: 12px; font-weight: 900; color: #10b981; }
+        .loss { color: #f43f5e; }
+        .buying-power { font-size: 48px; font-weight: 900; letter-spacing: -2px; margin: 0; }
+        .status-tag { display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-top: 40px; }
+        .dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+      `}</style>
 
-      <nav className="max-w-6xl mx-auto mb-16">
-        <h1 className="text-2xl font-[900] tracking-tighter uppercase border-b-[6px] border-[#0f172a] inline-block">The Editorial Ledger</h1>
-      </nav>
+      <nav><h1>The Editorial Ledger</h1></nav>
 
-      <main className="max-w-6xl mx-auto space-y-12">
-        {/* HERO SECTION */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-12 items-end">
-          <div className="space-y-2">
-            <p className="text-[11px] font-[900] text-slate-400 uppercase tracking-[0.2em]">Net Worth Portfolio</p>
-            <h2 className="text-8xl font-[900] tracking-tighter leading-none">${Number(totalValue).toLocaleString()}</h2>
-            <div className={`flex items-center gap-2 font-bold ${dailyChange >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-              {dailyChange >= 0 ? <ArrowUpRight size={20} /> : <ArrowDownRight size={20} />}
-              <span className="text-lg">{dailyChange.toFixed(2)}% Performance Today</span>
-            </div>
-          </div>
+      <main>
+        <div className="hero">
+          <p className="label">Portfolio Liquidity</p>
+          <h2 className="total-val">${Number(totalValue).toLocaleString()}</h2>
+        </div>
 
-          {/* GROWTH CHART */}
-          <div className="h-48 w-full bg-white rounded-[2.5rem] p-6 border border-slate-100 shadow-sm">
-            {Charts && (
-              <Charts.ResponsiveContainer width="100%" height="100%">
-                <Charts.AreaChart data={data.history}>
-                  <defs>
-                    <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#0f172a" stopOpacity={0.1}/>
-                      <stop offset="95%" stopColor="#0f172a" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <Charts.Area type="monotone" dataKey="Total Value" stroke="#0f172a" fill="url(#colorVal)" strokeWidth={4} dot={false} />
-                </Charts.AreaChart>
-              </Charts.ResponsiveContainer>
-            )}
-          </div>
-        </section>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* ASSET LIST */}
-          <div className="lg:col-span-2 bg-white p-8 md:p-12 rounded-[3rem] border border-slate-100 shadow-sm">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-300 mb-10">Asset Distribution</h3>
-            <div className="space-y-1">
-              {stocks.map((stock, i) => {
-                const gain = (stock['Total Gain %'] * 100).toFixed(1);
-                return (
-                  <div key={i} className="flex justify-between items-center py-6 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors px-6 -mx-6 rounded-2xl group">
-                    <div>
-                      <p className="font-[900] text-2xl tracking-tighter uppercase group-hover:translate-x-1 transition-transform">{stock.Ticker}</p>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{stock.Name}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-2xl">${Number(stock['Current Price']).toLocaleString()}</p>
-                      <p className={`text-xs font-black ${gain >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                        {gain >= 0 ? '▲' : '▼'} {Math.abs(gain)}%
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* BUYING POWER SIDEBAR */}
-          <div className="bg-[#0f172a] text-white p-10 rounded-[3rem] shadow-xl flex flex-col justify-between border-t border-white/10">
-            <div>
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-10 flex items-center gap-2">
-                <Wallet size={14} /> Buying Power
-              </h3>
-              <p className="text-6xl font-[900] tracking-tighter">${Number(cashValue).toLocaleString()}</p>
-            </div>
-            <div className="mt-10 pt-10 border-t border-white/5">
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">System Status</p>
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                <span className="text-xs font-bold uppercase tracking-tighter opacity-60">Live Sheet Connection</span>
+        <div className="dashboard-grid">
+          <div className="card">
+            <p className="label">Asset Distribution</p>
+            {stocks.map((s, i) => (
+              <div key={i} className="stock-row">
+                <div>
+                  <p className="ticker">{s.Ticker}</p>
+                  <p className="stock-name">{s.Name}</p>
+                </div>
+                <div style={{textAlign: 'right'}}>
+                  <p className="price">${Number(s['Current Price']).toLocaleString()}</p>
+                  <p className={`gain ${s['Total Gain %'] < 0 ? 'loss' : ''}`}>
+                    {s['Total Gain %'] >= 0 ? '▲' : '▼'} {Math.abs(s['Total Gain %'] * 100).toFixed(1)}%
+                  </p>
+                </div>
               </div>
+            ))}
+          </div>
+
+          <div className="card cash-card">
+            <div>
+              <p className="label" style={{color: '#475569'}}>Buying Power</p>
+              <p className="buying-power">${Number(cashValue).toLocaleString()}</p>
+            </div>
+            <div className="status-tag">
+              <div className="dot"></div>
+              <span>Live Connection</span>
             </div>
           </div>
         </div>
