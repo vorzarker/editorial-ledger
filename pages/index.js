@@ -1,24 +1,22 @@
-import React, { useState, useEffect, dynamic } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { Wallet, ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react';
-
-// This is the fix: It tells the chart to only load once it's in the browser
-const DynamicAreaChart = typeof window !== 'undefined' ? require('recharts').AreaChart : null;
-const DynamicArea = typeof window !== 'undefined' ? require('recharts').Area : null;
-const DynamicContainer = typeof window !== 'undefined' ? require('recharts').ResponsiveContainer : null;
 
 const API_URL = "https://script.google.com/macros/s/AKfycbznNPnaMdxuHaXIy1fLj1sPvanpRLUcLPmsD7_35kR95_vtFHqDQH9DlJXSc9ujXhNp/exec";
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
-  const [mounted, setMounted] = useState(false);
+  const [Charts, setCharts] = useState(null);
 
   useEffect(() => {
-    setMounted(true);
+    // 1. Fetch the data
     fetch(API_URL).then(res => res.json()).then(setData);
+
+    // 2. ONLY load the charts library after we are in the browser
+    import('recharts').then(mod => setCharts(mod));
   }, []);
 
-  if (!data || !mounted) return (
+  if (!data) return (
     <div className="flex h-screen items-center justify-center bg-[#fcfcfd]">
       <div className="flex flex-col items-center gap-4">
         <Loader2 className="animate-spin text-slate-400" size={32} />
@@ -47,36 +45,36 @@ export default function Dashboard() {
       <main className="max-w-5xl mx-auto px-8 space-y-16 pt-10">
         <section className="grid grid-cols-1 md:grid-cols-2 gap-12 items-end">
           <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Portfolio Liquidity</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Net Worth</p>
             <h2 className="text-7xl md:text-8xl font-black tracking-tighter leading-none mb-6">
               ${Number(totalValue).toLocaleString()}
             </h2>
             <div className={`flex items-center gap-2 font-bold ${dailyChange >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
               {dailyChange >= 0 ? <ArrowUpRight size={20} /> : <ArrowDownRight size={20} />}
-              <span>{dailyChange.toFixed(2)}% Performance Today</span>
+              <span>{dailyChange.toFixed(2)}% Performance</span>
             </div>
           </div>
 
           <div className="h-40 w-full bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
-            {DynamicContainer && (
-              <DynamicContainer width="100%" height="100%">
-                <DynamicAreaChart data={data.history}>
+            {Charts && (
+              <Charts.ResponsiveContainer width="100%" height="100%">
+                <Charts.AreaChart data={data.history}>
                   <defs>
                     <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#0f172a" stopOpacity={0.1}/>
                       <stop offset="95%" stopColor="#0f172a" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <DynamicArea type="monotone" dataKey="Total Value" stroke="#0f172a" fillOpacity={1} fill="url(#colorVal)" strokeWidth={3} />
-                </DynamicAreaChart>
-              </DynamicContainer>
+                  <Charts.Area type="monotone" dataKey="Total Value" stroke="#0f172a" fillOpacity={1} fill="url(#colorVal)" strokeWidth={3} />
+                </Charts.AreaChart>
+              </Charts.ResponsiveContainer>
             )}
           </div>
         </section>
 
         <section className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
           <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-8 flex items-center gap-2">
-            <Wallet size={14} /> Asset Distribution
+            <Wallet size={14} /> Current Holdings
           </h3>
           <div className="space-y-2">
             {data.holdings.map((stock, i) => (
