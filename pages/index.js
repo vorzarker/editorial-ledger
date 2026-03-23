@@ -1,4 +1,6 @@
+'use client';
 import React, { useState, useEffect } from 'react';
+import Head from 'next/head';
 
 const API_URL = "https://script.google.com/macros/s/AKfycbznNPnaMdxuHaXIy1fLj1sPvanpRLUcLPmsD7_35kR95_vtFHqDQH9DlJXSc9ujXhNp/exec";
 
@@ -9,77 +11,85 @@ export default function Dashboard() {
     fetch(API_URL).then(res => res.json()).then(setData);
   }, []);
 
-  if (!data) return <div style={{display:'flex', height:'100vh', alignItems:'center', justifyContent:'center', fontWeight:'900', fontFamily:'sans-serif'}}>SYNCING LEDGER...</div>;
+  if (!data) return (
+    <div style={{display:'flex', height:'100vh', alignItems:'center', justifyContent:'center', backgroundColor:'#fcfcfd', color:'#94a3b8', fontWeight:'900', textTransform:'uppercase', letterSpacing:'-0.05em'}}>
+      Syncing Ledger...
+    </div>
+  );
 
   const latest = data.history?.[data.history.length - 1] || {};
   const totalValue = latest['Total Value'] || 0;
+  const dailyChange = (latest['Daily Change %'] || 0) * 100;
   const stocks = data.holdings.filter(s => s.Ticker !== 'CASH');
   const cashValue = data.holdings.find(s => s.Ticker === 'CASH')?.['Current Price'] || 0;
 
   return (
-    <div className="app-container">
-      <style>{`
-        body { margin: 0; background-color: #fcfcfd; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #0f172a; }
-        .app-container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
-        nav { margin-bottom: 60px; }
-        h1 { font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: -1px; border-bottom: 6px solid #0f172a; display: inline-block; padding-bottom: 4px; margin: 0; }
-        .hero { margin-bottom: 80px; }
-        .label { font-size: 11px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; }
-        .total-val { font-size: clamp(60px, 12vw, 120px); font-weight: 900; letter-spacing: -6px; line-height: 0.9; margin: 0; }
-        .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 32px; }
-        @media (max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; } }
-        .card { background: white; border-radius: 40px; border: 1px solid #f1f5f9; padding: 40px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05); }
-        .cash-card { background: #0f172a; color: white; display: flex; flex-direction: column; justify-content: space-between; }
-        .stock-row { display: flex; justify-content: space-between; align-items: center; padding: 24px 0; border-bottom: 1px solid #f8fafc; }
-        .stock-row:last-child { border: none; }
-        .ticker { font-size: 24px; font-weight: 900; letter-spacing: -1px; text-transform: uppercase; margin: 0; }
-        .stock-name { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
-        .price { font-size: 20px; font-weight: 700; margin: 0; }
-        .gain { font-size: 12px; font-weight: 900; color: #10b981; }
-        .loss { color: #f43f5e; }
-        .buying-power { font-size: 48px; font-weight: 900; letter-spacing: -2px; margin: 0; }
-        .status-tag { display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-top: 40px; }
-        .dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
-      `}</style>
+    <div className="container">
+      <Head>
+        <title>The Editorial Ledger</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet" />
+        <style>{`
+          body { font-family: 'Inter', sans-serif; background-color: #fcfcfd; color: #0f172a; -webkit-font-smoothing: antialiased; margin: 0; }
+          .container { max-width: 1100px; margin: 0 auto; padding: 60px 40px; }
+          .hero-value { font-size: clamp(64px, 12vw, 140px); font-weight: 900; letter-spacing: -0.07em; line-height: 0.85; margin: 20px 0; }
+          .ticker-card { background: white; border-radius: 48px; border: 1px solid #f1f5f9; padding: 48px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.02); }
+          .cash-sidebar { background: #0f172a; color: white; border-radius: 48px; padding: 48px; display: flex; flex-direction: column; justify-content: space-between; min-height: 300px; }
+        `}</style>
+      </Head>
 
-      <nav><h1>The Editorial Ledger</h1></nav>
+      <nav className="mb-24">
+        <h1 className="text-2xl font-[900] tracking-tighter uppercase border-b-[6px] border-[#0f172a] inline-block">The Editorial Ledger</h1>
+      </nav>
 
       <main>
-        <div className="hero">
-          <p className="label">Portfolio Liquidity</p>
-          <h2 className="total-val">${Number(totalValue).toLocaleString()}</h2>
-        </div>
-
-        <div className="dashboard-grid">
-          <div className="card">
-            <p className="label">Asset Distribution</p>
-            {stocks.map((s, i) => (
-              <div key={i} className="stock-row">
-                <div>
-                  <p className="ticker">{s.Ticker}</p>
-                  <p className="stock-name">{s.Name}</p>
-                </div>
-                <div style={{textAlign: 'right'}}>
-                  <p className="price">${Number(s['Current Price']).toLocaleString()}</p>
-                  <p className={`gain ${s['Total Gain %'] < 0 ? 'loss' : ''}`}>
-                    {s['Total Gain %'] >= 0 ? '▲' : '▼'} {Math.abs(s['Total Gain %'] * 100).toFixed(1)}%
-                  </p>
-                </div>
-              </div>
-            ))}
+        <header className="mb-20">
+          <p className="text-[11px] font-[900] text-slate-400 uppercase tracking-[0.25em]">Portfolio Liquidity</p>
+          <h2 className="hero-value">${Number(totalValue).toLocaleString()}</h2>
+          <div className={`text-lg font-bold ${dailyChange >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+            {dailyChange >= 0 ? '▲' : '▼'} {Math.abs(dailyChange).toFixed(2)}% Performance Today
           </div>
+        </header>
 
-          <div className="card cash-card">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+          {/* Main List */}
+          <section className="lg:col-span-2 ticker-card">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 mb-12">Asset Distribution</h3>
+            <div className="divide-y divide-slate-50">
+              {stocks.map((stock, i) => {
+                const gain = (stock['Total Gain %'] * 100).toFixed(1);
+                return (
+                  <div key={i} className="flex justify-between items-center py-8 first:pt-0 last:pb-0">
+                    <div>
+                      <p className="text-3xl font-[900] tracking-tighter uppercase">{stock.Ticker}</p>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{stock.Name}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold tracking-tight">${Number(stock['Current Price']).toLocaleString()}</p>
+                      <p className={`text-xs font-black ${gain >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                        {gain >= 0 ? '+' : ''}{gain}%
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Cash Sidebar */}
+          <aside className="cash-sidebar shadow-2xl">
             <div>
-              <p className="label" style={{color: '#475569'}}>Buying Power</p>
-              <p className="buying-power">${Number(cashValue).toLocaleString()}</p>
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-10">Buying Power</h3>
+              <p className="text-6xl font-[900] tracking-tighter">${Number(cashValue).toLocaleString()}</p>
             </div>
-            <div className="status-tag">
-              <div className="dot"></div>
-              <span>Live Connection</span>
+            <div className="pt-10 border-t border-white/10">
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Sync Status</p>
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                <span className="text-[11px] font-bold uppercase tracking-tight opacity-50">Live Connection</span>
+              </div>
             </div>
-          </div>
+          </aside>
         </div>
       </main>
     </div>
